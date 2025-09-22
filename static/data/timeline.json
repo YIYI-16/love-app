@@ -1,0 +1,32 @@
+[
+  {
+    "date": "2025-05-15",
+    "title": "初次相遇",
+    "description": "在新加坡滨海湾商场一起吃饭",
+    "icon": "bi bi-heart"
+  },
+  {
+    "date": "2025-06-14",
+    "title": "第一次叫姐姐",
+    "description": "关系升温 开始暧昧",
+    "icon": "bi bi-cup-straw"
+  },
+  {
+    "date": "2025-06-23",
+    "title": "第一次拥抱",
+    "description": "在深圳宝安机场第一次抱着",
+    "icon": "bi bi-cup-straw"
+  },
+  {
+    "date": "2025-06-24",
+    "title": "正式交往",
+    "description": "在网上确认了情侣关系",
+    "icon": "bi bi-people"
+  },
+  {
+    "date": "2025-08-12",
+    "title": "第一次旅行",
+    "description": "一起去亚庇去度蜜月",
+    "icon": "bi bi-geo-alt"
+  }
+]

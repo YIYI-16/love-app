@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <h1 class="section-title mb-4">我们的照片墙</h1>
+        <p class="lead mb-5">珍藏我们共同经历的每一个美好瞬间</p>
+        
+        <div class="row gallery" id="gallery">
+            {% for filename in image_files[:12] %}
+            {% set name = filename.split('.')[0] %}
+            {% set ext = filename.split('.')[1] if '.' in filename else 'jpg' %}
+            <div class="col-md-4 col-sm-6 mb-4">
+                <div class="gallery-item">
+                    <a href="{{ url_for('static', filename='images/' + filename) }}" 
+                       data-size="1200x800"
+                       data-original="{{ url_for('static', filename='images/' + filename) }}">
+                        <img src="{{ url_for('static', filename='images/' + filename) }}" 
+                             alt="我们的照片" 
+                             class="img-fluid lazy"
+                             data-src="{{ url_for('static', filename='images/' + filename) }}"
+                             loading="lazy"
+                             width="300"
+                             height="300">
+                    </a>
+                    <div class="gallery-caption">
+                        <h5 class="mb-0">美好的回忆</h5>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if image_files|length > 12 %}
+        <div class="text-center mt-5">
+            <button id="loadMoreBtn" class="btn btn-primary btn-lg">加载更多照片</button>
+            <div id="loadingSpinner" class="spinner-border text-primary mt-3" style="display: none;">
+                <span class="visually-hidden">加载中...</span>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- PhotoSwipe弹窗 -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="pswp__bg"></div>
+    <div class="pswp__scroll-wrap">
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+        <div class="pswp__ui pswp__ui--hidden">
+            <div class="pswp__top-bar">
+                <div class="pswp__counter"></div>
+                <button class="pswp__button pswp__button--close" title="关闭 (Esc)"></button>
+                <button class="pswp__button pswp__button--share" title="分享"></button>
+                <button class="pswp__button pswp__button--fs" title="全屏切换"></button>
+                <button class="pswp__button pswp__button--zoom" title="放大/缩小"></button>
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+            <button class="pswp__button pswp__button--arrow--left" title="上一张"></button>
+            <button class="pswp__button pswp__button--arrow--right" title="下一张"></button>
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PhotoSwipe库 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/default-skin/default-skin.min.css">
+
+<style>
+    .gallery-item {
+        position: relative;
+        overflow: hidden;
+        border-radius: 0.5rem;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    }
+    .gallery-item img {
+        width: 100%;
+        height: 250px;
+        object-fit: contain;
+        background: #f8f9fa;
+        transition: transform 0.3s ease;
+        aspect-ratio: attr(width) / attr(height);
+    }
+    .pswp__img {
+        object-fit: contain !important;
+    }
+    .gallery-item:hover img {
+        transform: scale(1.03);
+    }
+    .gallery-caption {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(0,0,0,0.7);
+        color: white;
+        padding: 1rem;
+        transform: translateY(100%);
+        transition: transform 0.3s ease;
+    }
+    .gallery-item:hover .gallery-caption {
+        transform: translateY(0);
+    }
+</style>
+
+<script>
+// 所有图片数据（从模板传递）
+const allImageFiles = JSON.parse('{{ image_files|tojson|safe }}');
+let currentPage = 1;
+const imagesPerPage = 12;
+
+document.addEventListener('DOMContentLoaded', function() {
+    // 初始化PhotoSwipe
+    const initPhotoSwipe = function() {
+        const pswpElement = document.querySelector('.pswp');
+        const items = Array.from(document.querySelectorAll('.gallery-item a')).map(link => {
+            const img = link.querySelector('img');
+            return {
+                src: link.getAttribute('href'),
+                w: 1200,
+                h: 800,
+                title: img.alt
+            };
+        });
+
+        const options = {
+            history: false,
+            focus: false,
+            showAnimationDuration: 0,
+            hideAnimationDuration: 0,
+            shareEl: false
+        };
+
+        document.querySelectorAll('.gallery-item a').forEach((link, index) => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const gallery = new PhotoSwipe(
+                    pswpElement,
+                    PhotoSwipeUI_Default,
+                    items,
+                    Object.assign({}, options, {
+                        index: index,
+                        getThumbBoundsFn: false,
+                        showHideOpacity: true,
+                        bgOpacity: 0.95,
+                        scaleMode: 'fit', // 保持比例适应屏幕
+                        maxSpreadZoom: 2, // 最大缩放倍数
+                        getDoubleTapZoom: function(isMouseClick, item) {
+                            return item.initialZoomLevel < 0.7 ? 1 : 1.5;
+                        }
+                    })
+                );
+                gallery.init();
+            });
+        });
+    };
+
+    // 高级懒加载
+    const initLazyLoading = function() {
+        if ('IntersectionObserver' in window) {
+            const lazyImages = document.querySelectorAll('img.lazy');
+            const imageObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        img.src = img.dataset.src;
+                        img.classList.remove('lazy');
+                        imageObserver.unobserve(img);
+                    }
+                });
+            });
+
+            lazyImages.forEach(img => {
+                imageObserver.observe(img);
+            });
+        }
+    };
+
+    // 加载更多图片
+    const loadMoreImages = function() {
+        const loadMoreBtn = document.getElementById('loadMoreBtn');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        
+        if (!loadMoreBtn) return;
+
+        loadMoreBtn.addEventListener('click', function() {
+            loadMoreBtn.style.display = 'none';
+            loadingSpinner.style.display = 'inline-block';
+
+            setTimeout(() => {
+                currentPage++;
+                const startIndex = (currentPage - 1) * imagesPerPage;
+                const endIndex = startIndex + imagesPerPage;
+                const nextImages = allImageFiles.slice(startIndex, endIndex);
+
+                if (nextImages.length === 0) {
+                    loadMoreBtn.style.display = 'none';
+                    loadingSpinner.style.display = 'none';
+                    return;
+                }
+
+                const galleryContainer = document.getElementById('gallery');
+                
+                nextImages.forEach(filename => {
+                    const name = filename.split('.')[0];
+                    const ext = filename.split('.')[1] || 'jpg';
+                    
+                    const colDiv = document.createElement('div');
+                    colDiv.className = 'col-md-4 col-sm-6 mb-4';
+                    
+                    colDiv.innerHTML = `
+                        <div class="gallery-item">
+                            <a href="/static/images/${filename}" 
+                               data-size="1200x800"
+                               data-original="/static/images/${filename}">
+                                <img src="/static/images/${filename}" 
+                                     alt="我们的照片" 
+                                     class="img-fluid lazy"
+                                     data-src="/static/images/${filename}"
+                                     loading="lazy"
+                                     width="300"
+                                     height="300">
+                            </a>
+                            <div class="gallery-caption">
+                                <h5 class="mb-0">美好的回忆</h5>
+                            </div>
+                        </div>
+                    `;
+                    
+                    galleryContainer.appendChild(colDiv);
+                });
+
+                // 重新初始化PhotoSwipe和懒加载
+                initPhotoSwipe();
+                initLazyLoading();
+
+                loadingSpinner.style.display = 'none';
+                
+                // 检查是否还有更多图片
+                if (endIndex >= allImageFiles.length) {
+                    loadMoreBtn.style.display = 'none';
+                } else {
+                    loadMoreBtn.style.display = 'inline-block';
+                }
+            }, 500);
+        });
+    };
+
+    initPhotoSwipe();
+    initLazyLoading();
+    loadMoreImages();
+});
+</script>
+{% endblock %}

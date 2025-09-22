@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <h1 class="display-4 fw-bold mb-4">我们的计时器</h1>
+            
+            <div class="timers-container">
+                {% for timer in timers_data.timers %}
+                <div class="timer-card mb-4 p-4 border rounded">
+                    <h2 class="h4 mb-3">{{ timer.title }}</h2>
+                    <div id="timer-{{ timer.id }}" class="display-5" 
+                         style="font-family: 'Courier New', monospace; font-weight: bold;">
+                        {{ timer.days }}天
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+// 每分钟刷新一次页面以更新时间
+setTimeout(() => {
+    window.location.reload();
+}, 60000);
+</script>
+
+<style>
+.timer-card {
+    background-color: #f8f9fa;
+    transition: all 0.3s ease;
+}
+.timer-card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+</style>
+{% endblock %}

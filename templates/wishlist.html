@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <h1 class="display-4 fw-bold mb-4">我们的愿望清单</h1>
+            
+            <div class="wishlist-items">
+                {% for item in wishlist_data %}
+                <div class="form-check mb-3">
+                    <input class="form-check-input wishlist-checkbox" 
+                           type="checkbox" 
+                           id="item-{{ item.id }}"
+                           data-id="{{ item.id }}"
+                           {% if item.completed %}checked{% endif %}>
+                    <label class="form-check-label fs-5 {% if item.completed %}text-decoration-line-through text-muted{% endif %}" 
+                           for="item-{{ item.id }}">
+                        {{ item.title }}
+                    </label>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+document.querySelectorAll('.wishlist-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+        const itemId = parseInt(this.dataset.id);
+        const isCompleted = this.checked;
+        
+        // 更新标签样式
+        const label = this.nextElementSibling;
+        if (isCompleted) {
+            label.classList.add('text-decoration-line-through', 'text-muted');
+        } else {
+            label.classList.remove('text-decoration-line-through', 'text-muted');
+        }
+
+        // 发送更新请求
+        fetch('/update_wishlist', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                id: itemId,
+                completed: isCompleted
+            })
+        });
+    });
+});
+</script>
+{% endblock %}

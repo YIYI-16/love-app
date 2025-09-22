@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <h1 class="section-title mb-4">我们的足迹地图</h1>
+        <p class="lead mb-5">探索我们共同走过的每一个特别地点</p>
+        
+        <div id="map-container" style="height: 600px;">
+            <div id="map"></div>
+            <div class="locations-list">
+                <h3 class="mb-3">我们的足迹</h3>
+                <ul class="list-group">
+                    {% for location in locations_data %}
+                    <li class="list-group-item">
+                        <h5>{{ location.name }}</h5>
+                        <div class="text-muted">{{ location.date }}</div>
+                        <p>{{ location.description }}</p>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <style>
+            #map-container {
+                display: flex;
+                gap: 20px;
+            }
+            #map {
+                flex: 2;
+                height: 100%;
+                border-radius: 8px;
+                background: #f8f9fa;
+            }
+            .locations-list {
+                flex: 1;
+                overflow-y: auto;
+                padding: 15px;
+                background: white;
+                border-radius: 8px;
+                box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            }
+            .list-group-item {
+                margin-bottom: 10px;
+                border-radius: 5px;
+                border: 1px solid rgba(0,0,0,0.1);
+                padding: 15px;
+                transition: all 0.3s ease;
+            }
+            .list-group-item:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            }
+            .list-group-item.active {
+                background-color: #ffebee;
+                border-left: 4px solid #ff6b6b;
+            }
+            .list-group-item.active h5,
+            .list-group-item.active p {
+                color: #333;
+            }
+            .list-group-item.active .text-muted {
+                color: #6c757d !important;
+            }
+        </style>
+    </div>
+</section>
+
+{% if use_amap %}
+<!-- 高德地图API -->
+<script src="https://webapi.amap.com/maps?v=2.0&key=b83bcdb0495de6b68a077c508ca09a1b"></script>
+{% else %}
+<!-- Google Maps API -->
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBorTZwYU3W06WHqkLjPMH14VL99hKZzao"></script>
+{% endif %}
+
+<script>
+// 传递模板数据到JavaScript
+const useAmap = {% if use_amap %}true{% else %}false{% endif %};
+const locations = JSON.parse('{{ locations_data|tojson|safe }}');
+const defaultCenter = {
+    lng: 114.162813,
+    lat: 22.279327
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    // 初始化地图
+    let map;
+    if (useAmap) {
+        map = new AMap.Map('map', {
+            zoom: 12,
+            center: [defaultCenter.lng, defaultCenter.lat]
+        });
+    } else {
+        map = new google.maps.Map(document.getElementById('map'), {
+            zoom: 12,
+            center: {lat: defaultCenter.lat, lng: defaultCenter.lng},
+            mapTypeId: 'roadmap'
+        });
+    }
+
+    // 添加地点标记
+    const listItems = document.querySelectorAll('.list-group-item');
+    
+    locations.forEach((location, index) => {
+        let marker;
+        if (useAmap) {
+            marker = new AMap.Marker({
+                position: new AMap.LngLat(location.lng, location.lat),
+                map: map,
+                icon: 'https://webapi.amap.com/theme/v1.3/markers/n/mark_b.png'
+            });
+            
+            marker.on('click', () => {
+                listItems.forEach(item => item.classList.remove('active'));
+                listItems[index].classList.add('active');
+                listItems[index].scrollIntoView({behavior: 'smooth', block: 'center'});
+            });
+        } else {
+            marker = new google.maps.Marker({
+                position: {lat: location.lat, lng: location.lng},
+                map: map,
+                icon: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png'
+            });
+            
+            marker.addListener('click', () => {
+                listItems.forEach(item => item.classList.remove('active'));
+                listItems[index].classList.add('active');
+                listItems[index].scrollIntoView({behavior: 'smooth', block: 'center'});
+            });
+        }
+    });
+    
+    // 列表项点击事件
+    listItems.forEach((item, index) => {
+        item.addEventListener('click', () => {
+            if (useAmap) {
+                map.setCenter([locations[index].lng, locations[index].lat]);
+            } else {
+                map.setCenter({lat: locations[index].lat, lng: locations[index].lng});
+            }
+            map.setZoom(15);
+        });
+    });
+
+    // 自动调整地图视野
+    if(locations.length > 0) {
+        if (useAmap) {
+            map.setFitView();
+        } else {
+            const bounds = new google.maps.LatLngBounds();
+            locations.forEach(loc => {
+                bounds.extend({lat: loc.lat, lng: loc.lng});
+            });
+            map.fitBounds(bounds);
+        }
+    }
+
+    // 添加地图控件
+    if (useAmap) {
+        map.addControl(new AMap.ControlBar({
+            showZoomBar: true,
+            showControlButton: true
+        }));
+    }
+});
+</script>
+{% endblock %}
