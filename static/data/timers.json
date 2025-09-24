@@ -3,7 +3,7 @@
         {
             "id": 4,
             "title": "即将见面时间",
-            "target_date": "2025-09-21",
+            "target_date": "2025-11-29",
             "is_countdown": true
         },
         {
@@ -28,6 +28,12 @@
             "id": 2,
             "title": "距离Z成年",
             "target_date": "2026-05-12", 
+            "is_countdown": true
+        },
+        {
+            "id": 6,
+            "title": "100天",
+            "target_date": "2025-10-01", 
             "is_countdown": true
         }
     ]

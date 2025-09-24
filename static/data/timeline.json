@@ -34,5 +34,11 @@
     "title": "第一次过生日",
     "description": "在武汉度过hml的20岁生日",
     "icon": "bi bi-geo-alt"
+  },
+  {
+    "date": "2025-10-01",
+    "title": "100天纪念日",
+    "description": "在新加坡度过在一起的100天",
+    "icon": "bi bi-geo-alt"
   }
 ]
